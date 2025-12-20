@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGEMENT
+  CASHIER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CASHIER) // Default to lowest access
+  createdAt DateTime @default(now())
+  orders    Order[]
+  auditLogs AuditLog[]
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  price       Decimal
+  stock       Int
+  barcode     String?     @unique
+  category    String
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  totalAmount Decimal
+  status      String      @default("COMPLETED")
+  cashierId   String
+  cashier     User        @relation(fields: [cashierId], references: [id])
+  items       OrderItem[]
+  createdAt   DateTime    @default(now())
+}
+
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName String // Snapshot of product name at time of purchase
+  quantity  Int
+  price     Decimal
+}
+
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // LOGIN, LOGOUT, CREATE, UPDATE, DELETE
+  entity    String   // USER, PRODUCT, ORDER, AUTH
+  details   String?  // JSON string or description
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
