@@ -18,6 +18,7 @@ model User {
   name      String
   email     String   @unique
   password  String
+  image     String?  // URL or path to profile image
   role      Role     @default(CASHIER) // Default to lowest access
   createdAt DateTime @default(now())
   orders    Order[]
@@ -43,6 +44,8 @@ model Order {
   cashier     User        @relation(fields: [cashierId], references: [id])
   items       OrderItem[]
   createdAt   DateTime    @default(now())
+  tableNumber Int?        // Assigned table number
+  paymentMethod String    @default("CASH") // CASH, OVO, DANA, GOPAY, QR
 }
 
 
@@ -66,4 +69,23 @@ model AuditLog {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model StoreSettings {
+  id           Int    @id @default(1)
+  storeName    String @default("Acme POS")
+  storeAddress String @default("Jalan Raya No. 123, Jakarta")
+  storePhone   String @default("021-12345678")
+  storeEmail   String @default("admin@acme.com")
+  storeFax     String?   @default("")
+}
+
+model LandingPage {
+    id              Int      @id @default(autoincrement())
+    heroTitle       String   @default("Welcome to Our POS System")
+    heroDescription String   @default("The best solution for your business management.")
+    heroImage       String   @default("/pos-tab.png")
+    features        Json?    // Array of { title, description, icon }
+    pricingPlans    Json?    // Array of { name, price, features, highlight, cta }
+    updatedAt       DateTime @updatedAt
 }

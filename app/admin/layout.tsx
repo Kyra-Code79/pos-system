@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
     Card,
     CardContent,
@@ -29,13 +30,16 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { signOut } from "@/auth"
 
-export default function AdminLayout({
+import { signOut, auth } from "@/auth"
+import { ProfileSettingsModal } from "@/components/admin/ProfileSettingsModal"
+
+export default async function AdminLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
+    const session = await auth();
     return (
         <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
             <div className="hidden border-r bg-muted/40 md:block">
@@ -43,7 +47,7 @@ export default function AdminLayout({
                     <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
                         <Link href="/" className="flex items-center gap-2 font-semibold">
                             <Package2 className="h-6 w-6" />
-                            <span className="">Acme POS</span>
+                            <span className="">K.Inc POS</span>
                         </Link>
                     </div>
                     <div className="flex-1">
@@ -82,6 +86,13 @@ export default function AdminLayout({
                             >
                                 <Shield className="h-4 w-4" />
                                 Audit Logs
+                            </Link>
+                            <Link
+                                href="/admin/settings"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                            >
+                                <Package2 className="h-4 w-4" />
+                                Settings
                             </Link>
                         </nav>
                     </div>
@@ -138,16 +149,20 @@ export default function AdminLayout({
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="secondary" size="icon" className="rounded-full">
-                                <CircleUser className="h-5 w-5" />
+                            <Button variant="secondary" size="icon" className="rounded-full overflow-hidden">
+                                <Avatar className="h-full w-full">
+                                    <AvatarImage src={session?.user?.image || undefined} alt={session?.user?.name || "User"} className="object-cover" />
+                                    <AvatarFallback>
+                                        <CircleUser className="h-5 w-5" />
+                                    </AvatarFallback>
+                                </Avatar>
                                 <span className="sr-only">Toggle user menu</span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>My Account</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>Settings</DropdownMenuItem>
-                            <DropdownMenuItem>Support</DropdownMenuItem>
+                            <ProfileSettingsModal user={session?.user} />
                             <DropdownMenuSeparator />
                             <form
                                 action={async () => {

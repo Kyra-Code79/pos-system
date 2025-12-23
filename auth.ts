@@ -42,6 +42,38 @@ export const { auth, signIn, signOut } = NextAuth({
             },
         }),
     ],
+    callbacks: {
+        async session({ session, token }) {
+            if (session.user && token.id) {
+                session.user.id = token.id as string;
+                try {
+                    const user = await prisma.user.findUnique({
+                        where: { id: token.id as string },
+                        select: { name: true, email: true, role: true, image: true }
+                    });
+
+                    if (user) {
+                        session.user.name = user.name;
+                        session.user.email = user.email;
+                        session.user.image = user.image;
+                        // @ts-ignore
+                        session.user.role = user.role;
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch fresh user data for session:', error);
+                }
+            }
+            return session;
+        },
+        async jwt({ token, user }) {
+            if (user) {
+                token.id = user.id;
+                // @ts-ignore
+                token.role = user.role;
+            }
+            return token;
+        }
+    },
     events: {
         async signIn({ user }) {
             try {
